@@ -71,39 +71,39 @@ app.prepare().then(async () => {
             },
           };
 
-          const scriptResponse = await fetch(
-            `https://${shop}/admin/api/2022-02/script_tags.json`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `token ${accessToken}`,
-              },
-            }
-          );
-          const scriptList = await scriptResponse.json();
-          const { script_tags } = scriptList;
-          console.log("script_tags_list", script_tags);
-          if (script_tags) {
-            if (
-              script_tags.findIndex((tag) => tag.src === scriptSrc) < 0 ||
-              script_tags.length < 0
-            ) {
-              const res = await fetch(
-                `https://${shop}/admin/api/2022-02/script_tags.json`,
-                {
-                  method: "POST",
-                  body: JSON.stringify(data),
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `token ${accessToken}`,
-                  },
-                }
-              );
-              const scriptData = await res.json();
-              console.log("scriptData", scriptData);
-            }
-          }
+          // const scriptResponse = await fetch(
+          //   `https://${shop}/admin/api/2022-02/script_tags.json`,
+          //   {
+          //     method: "GET",
+          //     headers: {
+          //       "Content-Type": "application/json",
+          //       Authorization: `token ${accessToken}`,
+          //     },
+          //   }
+          // );
+          // const scriptList = await scriptResponse.json();
+          // const { script_tags } = scriptList;
+          // console.log("script_tags_list", script_tags);
+          // if (script_tags) {
+          //   if (
+          //     script_tags.findIndex((tag) => tag.src === scriptSrc) < 0 ||
+          //     script_tags.length < 0
+          //   ) {
+          //     const res = await fetch(
+          //       `https://${shop}/admin/api/2022-02/script_tags.json`,
+          //       {
+          //         method: "POST",
+          //         body: JSON.stringify(data),
+          //         headers: {
+          //           "Content-Type": "application/json",
+          //           Authorization: `token ${accessToken}`,
+          //         },
+          //       }
+          //     );
+          //     const scriptData = await res.json();
+          //     console.log("scriptData", scriptData);
+          //   }
+          // }
         } catch (e) {
           console.log("scriptTagError", e);
         }
