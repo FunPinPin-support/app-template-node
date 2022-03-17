@@ -1,6 +1,6 @@
 .branch_to_build: &btb
   only:
-  - dev@apps/together-buy
+  - dev@apps/cookie-bar
 
 
 .runner: &runner
