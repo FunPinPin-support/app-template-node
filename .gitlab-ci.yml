@@ -1,11 +1,11 @@
 .branch_to_build: &btb
   only:
-  - dev@apps/cookie-bar
+    - dev@apps/together-buy
 
 
 .runner: &runner
   tags:
-  - gaea-storefront-new
+    - gaea-storefront-new
 
 cache:
   key: "$PROJECT_ID-$CI_PROJECT_NAME:$DEPLOY_ENV-$CI_PIPELINE_ID"
@@ -29,6 +29,7 @@ variables:
   EGRESS: private-ranges-only
   INGRESS: internal-and-cloud-load-balancing
   REGION: us-central1
+  GROUP: apps
 
 
 build:
@@ -36,24 +37,24 @@ build:
   <<: *btb
   <<: *runner
   script:
-  - docker build -t gcr.io/$PROJECT_ID/$CI_PROJECT_NAME:$DEPLOY_ENV-$CI_PIPELINE_ID -t gcr.io/$PROJECT_ID/$CI_PROJECT_NAME:$DEPLOY_ENV .
+    - docker build -t gcr.io/$PROJECT_ID/$CI_PROJECT_NAME:$DEPLOY_ENV-$CI_PIPELINE_ID -t gcr.io/$PROJECT_ID/$CI_PROJECT_NAME:$DEPLOY_ENV .
 
 push:
   stage: push
   <<: *runner
   script:
-  - docker push gcr.io/$PROJECT_ID/$CI_PROJECT_NAME:$DEPLOY_ENV-$CI_PIPELINE_ID
-  - docker push gcr.io/$PROJECT_ID/$CI_PROJECT_NAME:$DEPLOY_ENV
+    - docker push gcr.io/$PROJECT_ID/$CI_PROJECT_NAME:$DEPLOY_ENV-$CI_PIPELINE_ID
+    - docker push gcr.io/$PROJECT_ID/$CI_PROJECT_NAME:$DEPLOY_ENV
 
 
-deploy_prod:
+deploy_dev:
   variables:
     VPC: gaea-prod-slvpc-usc1-v2
     MIN: 1
   stage: deploy
   <<: *runner
   script:
-    - gcloud beta run deploy $CI_PROJECT_NAME-${DEPLOY_ENV}
+    - gcloud beta run deploy $GROUP-$CI_PROJECT_NAME-fe-${DEPLOY_ENV}
       --image gcr.io/$PROJECT_ID/$CI_PROJECT_NAME:${DEPLOY_ENV}-$CI_PIPELINE_ID
       --platform managed
       --allow-unauthenticated
