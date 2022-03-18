@@ -47,7 +47,7 @@ Fpp.Context.initialize({
 });
 // Storing the currently active shops in memory will force them to re-login when your server restarts. You should
 // persist this object in your app.
-// const ACTIVE_SHOPIFY_SHOPS = {};
+const ACTIVE_SHOPIFY_SHOPS = {};
 
 app.prepare().then(async () => {
   const server = new Koa();
@@ -61,7 +61,7 @@ app.prepare().then(async () => {
         console.log("token", shop, accessToken);
         const host = ctx.query.host;
         const scriptSrc = `${process.env.HOST}together-buy.js`;
-        // ACTIVE_SHOPIFY_SHOPS[shop] = scope;
+        ACTIVE_SHOPIFY_SHOPS[shop] = scope;
 
         try {
           const data = {
@@ -165,11 +165,9 @@ app.prepare().then(async () => {
   router.get("/_next/webpack-hmr", handleRequest); // Webpack content is clear
   router.get("(.*)", async (ctx) => {
     const shop = ctx.query.shop;
-    console.log(">>>>", ctx.currentSession);
     // This shop hasn't been seen yet, go through OAuth to create a session
     if (
-      !(ctx.currentSession && ctx.currentSession.id) ||
-      (ctx.currentSession && ctx.currentSession.shop !== shop)
+     ACTIVE_SHOPIFY_SHOPS[shop] === undefined
     ) {
       ctx.redirect(`/auth?shop=${shop}`);
     } else {
