@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-const baseUrl = "https://apps-cookie-bar-api-cuwmnyhgmq-uc.a.run.app";
+const baseUrl = "https://xxx";
 const request = async (
   ctx,
   path,
@@ -37,7 +37,6 @@ const request = async (
   }
   const url = query === "?" ? baseUrl + path : baseUrl + path + query;
   const res = await fetch(url, data);
-  console.log(">>>res", res, url, data);
   return res.json();
 };
 
