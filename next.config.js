@@ -3,7 +3,7 @@ const TerserPlugin = require("terser-webpack-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const webpack = require("webpack");
 const path = require("path");
-const apiKey = JSON.stringify(process.env.SHOPIFY_API_KEY);
+const apiKey = JSON.stringify(process.env.FPP_API_KEY);
 
 module.exports = {
   webpack: (config, { dev, isServer }) => {

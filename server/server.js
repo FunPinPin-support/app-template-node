@@ -4,15 +4,13 @@ import dotenv from "dotenv";
 import "isomorphic-fetch";
 import createFppAuth, { verifyRequest } from "koa-fpp-auth";
 import Fpp, { ApiVersion } from "fpp-node-api";
-import RedisStorage from "./session/redisStorage";
 import Koa from "koa";
 import next from "next";
 import Router from "koa-router";
 import koaBody from "koa-body";
-import cookieBarRouter from "./routes";
+import customerRouter from "./routes";
 import koaStatic from "koa-static";
 import path from "path";
-import fetch from "node-fetch";
 const { engines } = require("../package.json");
 if (!semver.satisfies(process.version, engines.node)) {
   console.log(
@@ -29,7 +27,6 @@ const app = next({
 });
 
 const handle = app.getRequestHandler();
-const sessionStorage = new RedisStorage();
 
 Fpp.Context.initialize({
   API_KEY: process.env.FPP_API_KEY,
@@ -39,15 +36,11 @@ Fpp.Context.initialize({
   API_VERSION: ApiVersion.February22,
   IS_EMBEDDED_APP: false,
   // This should be replaced with your preferred storage strategy
-  SESSION_STORAGE: new Fpp.Session.CustomSessionStorage(
-    sessionStorage.storeCallback.bind(sessionStorage),
-    sessionStorage.loadCallback.bind(sessionStorage),
-    sessionStorage.deleteCallback.bind(sessionStorage)
-  ),
+  SESSION_STORAGE: new Fpp.Session.MemorySessionStorage(),
 });
 // Storing the currently active shops in memory will force them to re-login when your server restarts. You should
 // persist this object in your app.
-const ACTIVE_SHOPIFY_SHOPS = {};
+const ACTIVE_SHOPS = {};
 
 app.prepare().then(async () => {
   const server = new Koa();
@@ -56,12 +49,12 @@ app.prepare().then(async () => {
   server.use(
     createFppAuth({
       async afterAuth(ctx) {
-        // Access token and shop available in ctx.state.shopify
+        // Access token and shop available in ctx.state.fpp
         const { shop, accessToken, scope } = ctx.state.fpp;
         console.log("token", shop, accessToken);
         const host = ctx.query.host;
         const scriptSrc = `${process.env.HOST}together-buy.js`;
-        ACTIVE_SHOPIFY_SHOPS[shop] = scope;
+        ACTIVE_SHOPS[shop] = scope;
 
         try {
           const data = {
@@ -70,58 +63,9 @@ app.prepare().then(async () => {
               src: scriptSrc,
             },
           };
-
-          // const scriptResponse = await fetch(
-          //   `https://${shop}/admin/api/2022-02/script_tags.json`,
-          //   {
-          //     method: "GET",
-          //     headers: {
-          //       "Content-Type": "application/json",
-          //       Authorization: `token ${accessToken}`,
-          //     },
-          //   }
-          // );
-          // const scriptList = await scriptResponse.json();
-          // const { script_tags } = scriptList;
-          // console.log("script_tags_list", script_tags);
-          // if (script_tags) {
-          //   if (
-          //     script_tags.findIndex((tag) => tag.src === scriptSrc) < 0 ||
-          //     script_tags.length < 0
-          //   ) {
-          //     const res = await fetch(
-          //       `https://${shop}/admin/api/2022-02/script_tags.json`,
-          //       {
-          //         method: "POST",
-          //         body: JSON.stringify(data),
-          //         headers: {
-          //           "Content-Type": "application/json",
-          //           Authorization: `token ${accessToken}`,
-          //         },
-          //       }
-          //     );
-          //     const scriptData = await res.json();
-          //     console.log("scriptData", scriptData);
-          //   }
-          // }
         } catch (e) {
           console.log("scriptTagError", e);
         }
-
-        // const response = await Shopify.Webhooks.Registry.register({
-        //   shop,
-        //   accessToken,
-        //   path: "/webhooks",
-        //   topic: "APP_UNINSTALLED",
-        //   webhookHandler: async (topic, shop, body) =>
-        //     delete ACTIVE_SHOPIFY_SHOPS[shop],
-        // });
-        //
-        // if (!response.success) {
-        //   console.log(
-        //     `Failed to register APP_UNINSTALLED webhook: ${response.result}`
-        //   );
-        // }
 
         // Redirect to app with shop parameter upon auth
         ctx.redirect(`/?shop=${shop}`);
@@ -166,16 +110,14 @@ app.prepare().then(async () => {
   router.get("(.*)", async (ctx) => {
     const shop = ctx.query.shop;
     // This shop hasn't been seen yet, go through OAuth to create a session
-    if (
-     ACTIVE_SHOPIFY_SHOPS[shop] === undefined
-    ) {
+    if (ACTIVE_SHOPS[shop] === undefined) {
       ctx.redirect(`/auth?shop=${shop}`);
     } else {
       await handleRequest(ctx);
     }
   });
   server.use(router.allowedMethods());
-  server.use(cookieBarRouter.routes());
+  server.use(customerRouter.routes());
   server.use(router.routes());
   server.listen(port, () => {
     console.log(`> Ready on http://localhost:${port}`);
