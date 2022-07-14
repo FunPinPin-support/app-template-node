@@ -1,11 +1,19 @@
+import 'regenerator-runtime/runtime'
 import React from "react";
-import Test from "@components/Test"
+import ProductCount from "@components/ProductCount"
+import {Card, Col, Row } from 'antd';
 
-const Index: React.FC<{}> = () => (
-  <div>
-    <h1>sdfsdfsd</h1>
-    <Test />
-  </div>
+const Index = () => (
+  <Row style={{padding: "10px 0", background: "transparent"}} gutter={40}>
+    <Col span={14}>
+      <Card title="Congratulations 🎉">
+          <p>You have successfully getting start.</p>
+      </Card>
+    </Col>
+    <Col span={8}>
+      <ProductCount />
+    </Col>
+  </Row>
 );
 
 export default Index;

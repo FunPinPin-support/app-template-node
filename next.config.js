@@ -1,11 +1,19 @@
 const { parsed: localEnv } = require("dotenv").config();
 const TerserPlugin = require("terser-webpack-plugin");
+const withLess = require("next-with-less");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const webpack = require("webpack");
 const path = require("path");
 const apiKey = JSON.stringify(process.env.FPP_API_KEY);
 
-module.exports = {
+const pathToLessFileWithVariables = path.resolve(__dirname + "/assets/antd.variable.less");
+
+
+module.exports = withLess({
+  lessLoaderOptions: {
+    additionalData: (content) =>
+      `${content}\n\n@import '${pathToLessFileWithVariables}';`,
+  },
   webpack: (config, { dev, isServer }) => {
     const env = { API_KEY: apiKey };
     config.plugins.push(new webpack.DefinePlugin(env));
@@ -57,4 +65,11 @@ module.exports = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-};
+  typescript: {
+    // !! WARN !!
+    // Dangerously allow production builds to successfully complete even if
+    // your project has type errors.
+    // !! WARN !!
+    ignoreBuildErrors: true,
+  },
+});

@@ -1,10 +1,10 @@
 import Router from "koa-router";
-import { getSetting } from "../api";
+import {getProductsCount} from "../api";
 
 const router = new Router();
 
-router.get("/setting", async (ctx) => {
-  const data = await getSetting(ctx);
+router.get("/products-count", async (ctx) => {
+  const data = await getProductsCount(ctx);
   ctx.body = data;
 });
 
